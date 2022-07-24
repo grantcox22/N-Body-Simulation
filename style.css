@@ -9,48 +9,47 @@ body {
     background-color: #000;
 }
 
-.canvas {
+canvas {
     width: 100vw;
     height: 100vh;
+    z-index: 1500;
     background-color: #000;
     position: absolute;
-    top:0;
-    left:0;
+    top: 0;
+    left: 0;
 }
 
-.nav {
+.logo {
     position: absolute;
-    display: flex;
-    left: 10px;
-    top: 10px;
-    width: 70px;
+    top: 5px;
+    left: 5px;
+    width: auto;
+    height: 3.8vh; 
+    min-height: 30px;
+    margin: 2px;
+    z-index: 2000;
 }
 
-.icon {
-    color: white;
-    margin: 5px;
-    font-size:1.2rem;
-}
 
-.settings {
+form {
     position: absolute;
+    z-index: 2000;
     padding: 5px;
-    right: 10px;
-    top: 10px;
+    right: 5px;
+    top: 5px;
     background-color: rgb(58, 58, 58);
-}
-
-li {
-    margin: 10px 10px 10px 10px;
     display: flex;
-    align-items:center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1em;
 }
 
-.slider {
-    background: rgb(187, 187, 187); 
+form a {
+    margin: 4px 0;
+    color: #fff;
 }
 
-.label {
-    color: rgb(200, 200, 200); 
-    margin-right: 5px;
+label {
+    color: #fff;
+    font-size: 1rem;
 }
