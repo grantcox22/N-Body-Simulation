@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { BsWindowSidebar } from 'react-icons/bs';
 import { ReactComponent as Logo } from '../../assets/logo.svg';
 import './style.css';
 
@@ -94,6 +95,7 @@ export default function NBody() {
 
     function update() {
         let G = form.current.g.value / 10;
+        let bodiesInFrame = 0;
         for (let i = 0; i < bodies.length; i++) {
             let b1 = bodies[i];
             b1.acc = {x : 0, y : 0};
@@ -138,9 +140,12 @@ export default function NBody() {
                 b1.acc.y += 5000 * dy / Math.pow(dist, 2);
             }
 
+            if (b1.pos.x > 0 && b1.pos.x < window.innerWidth && b1.pos.y > 0 && b1.pos.y < window.innerHeight) bodiesInFrame++;
+
             b1.update(form.current.s.value / 500);
             b1.draw(ctx.current);
         }
+        if (bodiesInFrame == 0) init();
     }
 
     window.onresize = () => {
@@ -156,12 +161,12 @@ export default function NBody() {
 
     return (
         <>
-        <a href="https://gcox.dev"><Logo className="logo" /></a>
-        <canvas ref={canvasRef}></canvas>
+        <a href="../"><Logo className="logo" /></a>
+        <canvas ref={canvasRef} className="canvas"></canvas>
         <div className="settings">
-            <form ref={form}>
+            <form className="form" ref={form}>
                 <label>Number</label>
-                <input name='n' type="range" min="2" max="200" defaultValue={40} onChange={() => {init()}}/>
+                <input name='n' type="range" min="10" max="200" defaultValue={40} onChange={() => {init()}}/>
                 <label>Gravity</label>
                 <input name='g' type="range" min="1" max="20" defaultValue={10}/>
                 <label>Speed</label>

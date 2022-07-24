@@ -1,18 +1,9 @@
-* {
-    padding: 0px;
-    margin: 0px;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
 
-body {
-    background-color: #000;
-}
 
-canvas {
+.canvas {
     width: 100vw;
     height: 100vh;
-    z-index: 1500;
+    z-index: 1500 !important;
     background-color: #000;
     position: absolute;
     top: 0;
@@ -31,7 +22,8 @@ canvas {
 }
 
 
-form {
+.form {
+    color: #fff;
     position: absolute;
     z-index: 2000;
     padding: 5px;
@@ -44,12 +36,7 @@ form {
     gap: 0.1em;
 }
 
-form a {
+.form a {
     margin: 4px 0;
     color: #fff;
-}
-
-label {
-    color: #fff;
-    font-size: 1rem;
 }
