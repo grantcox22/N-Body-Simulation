@@ -18,7 +18,7 @@ class Body {
             y: 0
         }
         this.mass = mass;
-        this.radius = Math.sqrt(mass) / 4;
+        this.radius = Math.sqrt(mass) / 3;
         this.color = color;
     }
 
@@ -31,7 +31,7 @@ class Body {
 
     update(DT) {
 
-        this.radius = Math.sqrt(this.mass) / 4;
+        this.radius = Math.sqrt(this.mass) / 3;
 
         this.vel.x += this.acc.x * (DT / 2);
         this.vel.y += this.acc.y * (DT / 2);
@@ -59,9 +59,60 @@ export default function NBody() {
         "#ff00f5"
     ];
     let bodies = [];
+    let mouse = false;
+    let ctrl = false;
+    let mousePos = {
+        x : 0,
+        y : 0
+    }
+    let startPos = null;
 
     // Smoothing Value
     const S = 0.98;
+
+    function drawLine(x1, x2, y1, y2) {
+        ctx.current.lineWidth = 2;
+        ctx.current.beginPath();
+        ctx.current.lineCap = "round";
+        ctx.current.moveTo(x1, y1);
+        ctx.current.lineTo(x2, y2);
+        ctx.current.strokeStyle = "#ff9900";
+        ctx.current.stroke();
+    }
+
+    function keydown(e) {
+        if (e.keyCode == 17) ctrl = true;
+    }
+
+    function keyup(e) {
+        if (e.keyCode == 17) ctrl = false;
+    }
+
+    function mousedown(e) {
+        startPos = {x : e.pageX, y : e.pageY}
+        mouse = true;
+    } 
+
+    function mouseup(e) {
+        let vx = startPos.x - e.pageX;
+        let vy = startPos.y - e.pageY;
+        if (!ctrl) bodies.push(new Body(e.pageX, e.pageY, vx * 0.3, vy * 0.3, parseInt(form.current.m.value), colors[Math.floor(Math.random() * 5)]));
+        mouse = false;
+        startPos = null;
+    }
+
+    function mousemove(e) {
+        let mousePosLast = mousePos;
+        mousePos = {x : e.pageX, y : e.pageY}
+        if (mouse && ctrl) {
+            let mouseDifX = mousePos.x - mousePosLast.x;
+            let mouseDifY = mousePos.y - mousePosLast.y;
+            bodies.forEach((body) => {
+                body.pos.x += mouseDifX;
+                body.pos.y += mouseDifY;
+            })
+        }
+    }
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -74,40 +125,35 @@ export default function NBody() {
 
         ctx.current = context;
 
-        init();
+        let can = document.querySelector(".canvas");
+
+        can.onmousedown = mousedown;
+        can.onmouseup = mouseup;
+        can.onmousemove = mousemove;
+        window.onkeydown = keydown;
+        window.onkeyup = keyup;
+
         animate();
 
     });
 
-    function init() {
+    function reset() {
         bodies = [];
-        for (let i = 0; i < form.current.n.value; i++) {
-            let mass = Math.random() * 99 + 1;
-            let x = (Math.random() * window.innerWidth);
-            let y = (Math.random() * window.innerHeight);
-            let velX = 0;
-            let velY = 0;
-            let color = colors[Math.floor(Math.random() * 5)];
-            bodies.push(new Body(x, y, velX, velY, mass, color));
-        }
-
+        ctx.current.clearRect(0, 0, window.innerWidth, window.innerHeight);
     }
 
     function update() {
         let G = form.current.g.value / 10;
-        let bodiesInFrame = 0;
-        for (let i = 0; i < bodies.length; i++) {
-            let b1 = bodies[i];
-            b1.acc = {x : 0, y : 0};
-            for (let j = i+1; j < bodies.length; j++) {
-                let b2 = bodies[j];
 
-                // Caluclate Distance
-                let dx = b2.pos.x - b1.pos.x;
-                let dy = b2.pos.y - b1.pos.y;
+        // Calculate Collsion
+        if (form.current.c.checked) {
+            for (let i = 0; i < bodies.length; i++) {
+                let b1 = bodies[i];
+                for (let j = i+1; j < bodies.length; j++) {
+                    let b2 = bodies[j];
 
-                // Calculate Collsion
-                if (form.current.c.checked) {
+                    let dx = b2.pos.x - b1.pos.x;
+                    let dy = b2.pos.y - b1.pos.y;
                     if (Math.sqrt((dx * dx) + (dy * dy)) <= b1.radius + b2.radius) {
                         let m = b1.mass + b2.mass;
                         let vel = {
@@ -125,6 +171,18 @@ export default function NBody() {
                         }
                     }
                 }
+            }
+        }
+
+        for (let i = 0; i < bodies.length; i++) {
+            let b1 = bodies[i];
+            b1.acc = {x : 0, y : 0};
+            for (let j = 0; j < bodies.length; j++) {
+                let b2 = bodies[j];
+
+                // Caluclate Distance
+                let dx = b2.pos.x - b1.pos.x;
+                let dy = b2.pos.y - b1.pos.y;
 
                 // Calculate Acceleration
                 let dist = Math.sqrt((dx * dx) + (dy * dy) + (S*S));
@@ -132,20 +190,8 @@ export default function NBody() {
                 b1.acc.y += G * b2.mass * dy / Math.pow(dist, 2);
             }
 
-            if (form.current.m.checked) {
-                let dx = window.innerWidth / 2 - b1.pos.x;
-                let dy = window.innerHeight / 2 - b1.pos.y;
-                let dist = Math.sqrt((dx * dx) + (dy * dy) + (S * S));
-                b1.acc.x += 5000 * dx / Math.pow(dist, 2);
-                b1.acc.y += 5000 * dy / Math.pow(dist, 2);
-            }
-
-            if (b1.pos.x > 0 && b1.pos.x < window.innerWidth && b1.pos.y > 0 && b1.pos.y < window.innerHeight) bodiesInFrame++;
-
-            b1.update(form.current.s.value / 500);
-            b1.draw(ctx.current);
+            b1.update(form.current.s.value / 1000);
         }
-        if (bodiesInFrame == 0) init();
     }
 
     window.onresize = () => {
@@ -155,29 +201,31 @@ export default function NBody() {
 
     function animate() {
         requestAnimationFrame(animate);
-        ctx.current.clearRect(0, 0, window.innerWidth, window.innerHeight);
         update();
+        if (mouse && !ctrl) drawLine(startPos.x, mousePos.x, startPos.y, mousePos.y);
+        ctx.current.fillStyle = "rgba(0,0,0,0.25)";
+        ctx.current.fillRect(0, 0, window.innerWidth, window.innerHeight);
+        for (let i = 0; i < bodies.length; i++)
+            bodies[i].draw(ctx.current);
     }
 
     return (
         <>
-        <a href="../"><Logo className="logo" /></a>
         <canvas ref={canvasRef} className="canvas"></canvas>
-        <div className="settings">
-            <form className="form" ref={form}>
-                <label>Number</label>
-                <input name='n' type="range" min="10" max="200" defaultValue={40} onChange={() => {init()}}/>
-                <label>Gravity</label>
-                <input name='g' type="range" min="1" max="20" defaultValue={10}/>
-                <label>Speed</label>
-                <input name='s' type="range" min="1" max="50" defaultValue={10}/>
-                <label>Center Mass</label>
-                <input name='m' type="checkbox" defaultValue={true}/>
-                <label>Collision</label>
-                <input name='c' type="checkbox" defaultValue={true}/>
-                <a onClick={() => init()} href={"#"}>Reset</a>
-            </form>
-        </div>
+        <form className="settings" ref={form}>
+            <label>Initial Mass</label>
+            <input name='m' type="range" min="10" max="500" defaultValue={100}/>
+            <label>Gravity</label>
+            <input name='g' type="range" min="1" max="20" defaultValue={10}/>
+            <label>Speed</label>
+            <input name='s' type="range" min="0" max="250" defaultValue={50}/>
+            <label>Collision</label>
+            <input name="c" type="checkbox" defaultValue={true} />
+            <a onClick={() => reset()} href={"#"}>Reset</a>
+            <a href={"./"}>Article</a>
+        </form>
+        <p className='info'>Click to Add | Ctrl + Click to Move</p>
+        <a href="./"><Logo className="logo" /></a>
         </>
     );
 }
